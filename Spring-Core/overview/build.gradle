@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.springframework', name: 'spring-core', version: '5.2.5.RELEASE'     //Spring Core
+    compile group: 'org.springframework', name: 'spring-context', version: '5.2.5.RELEASE'  //Spring Context
+
+    testCompile group: 'org.springframework', name: 'spring-test', version: '5.2.5.RELEASE' //Spring Test
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
