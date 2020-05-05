@@ -1,0 +1,37 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.6.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+group = 'com.ws.spring'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+//	implementation 'org.springframework.boot:spring-boot-starter'				// Spring Boot
+	implementation 'org.springframework.boot:spring-boot-starter-web'			// Spring Web
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'		// Spring Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-aop'			// Spring AOP
+
+	compileOnly 'org.projectlombok:lombok'										// Lombok support
+	annotationProcessor 'org.projectlombok:lombok'								// Lombok support
+
+	implementation 'org.modelmapper.extensions:modelmapper-spring:1.1.2'		// ModelMapper
+
+	testImplementation('org.springframework.boot:spring-boot-starter-test') 	// Spring Test
+}
+
+test {
+	useJUnitPlatform()
+}

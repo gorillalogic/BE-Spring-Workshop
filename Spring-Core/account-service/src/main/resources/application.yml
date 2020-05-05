@@ -1,0 +1,15 @@
+spring.profiles.active: world, test
+
+logging.level.org.springframework: debug
+
+example2.property:
+  list: A, B, C
+  hello:
+    moon: Hello moon!
+    world: Hello world!
+
+
+# SERVER #
+server:
+  servlet.context-path: /accounts #/...
+  port: 8081

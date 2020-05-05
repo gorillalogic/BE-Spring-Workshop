@@ -1,0 +1,12 @@
+#spring.profiles.active = moon
+
+#logging.level.org.springframework = debug
+
+#example2.property.hello.moon = Hello moon!
+#example2.property.hello.world = Hello world!
+#example2.property.list = A, B, C
+
+
+# SERVER #
+#server.servlet.context-path = /accounts
+#server.port = 8081
