@@ -5,17 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Profile("test")
 @Repository
 public class AccountMockRepository implements AccountRepository {
 
-    private Map<String, Account> accounts;
+    private Map<Integer, Account> accounts;
 
 
     public AccountMockRepository() {
@@ -23,7 +20,7 @@ public class AccountMockRepository implements AccountRepository {
     }
 
     @Override
-    public Optional<Account> getById(String id) {
+    public Optional<Account> getById(Integer id) {
         log.info("Repository layer looking for Account entity with id: " + id);
 
         return Optional.of(accounts.get(id));
@@ -44,7 +41,7 @@ public class AccountMockRepository implements AccountRepository {
         log.info("Repository layer saving Account: " + account);
 
         if(account.getId() == null) {
-            account.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE) + 1));
+            account.setId(new Random().nextInt(Integer.MAX_VALUE) + 1);
         }
 
         accounts.put(account.getId(), account);

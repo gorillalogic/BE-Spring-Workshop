@@ -9,6 +9,6 @@ import java.time.LocalDateTime;
 public class DebitResponseDto extends DebitRequestDto {
 
     private LocalDateTime dateTime;
-    private String transactionNumber;
+    private Integer transactionNumber;
 
 }

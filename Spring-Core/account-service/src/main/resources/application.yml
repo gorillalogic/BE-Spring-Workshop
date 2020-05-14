@@ -1,6 +1,12 @@
-spring.profiles.active: world, test
+spring.main.allow-bean-definition-overriding: true
+spring.profiles.active:
+  - world
+#  - test
+#  - mongo
+  - sql
 
-logging.level.org.springframework: debug
+
+#logging.level.org.springframework: debug
 
 example2.property:
   list: A, B, C
@@ -13,3 +19,19 @@ example2.property:
 server:
   servlet.context-path: /accounts #/...
   port: 8081
+
+# MONGO #
+# Download docker image: docker pull mongo
+# Run Docker image: docker run -p 27017:27017 --name mongo1 -d mongo
+spring.data.mongodb.uri: mongodb://localhost/ws-account-service
+
+
+# MySQL #
+# Download docker image: docker pull mysql
+# Run Docker image: docker run -p 3306:3306 --name mysql1 -e MYSQL_ROOT_PASSWORD=mypass -d mysql
+spring:
+  jpa.hibernate.ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/ws-account-service
+    username: root
+    password: mypass
