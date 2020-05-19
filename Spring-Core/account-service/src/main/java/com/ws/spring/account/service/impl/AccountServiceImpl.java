@@ -11,15 +11,14 @@ import com.ws.spring.account.exception.*;
 import com.ws.spring.account.repository.AccountRepository;
 import com.ws.spring.account.service.AccountService;
 import com.ws.spring.account.service.TransactionService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
-//@Slf4j
 @Service
 public class AccountServiceImpl implements AccountService {
 
@@ -37,22 +36,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Optional<Account> getById(Integer id) {
-//        log.info("Service layer looking for Account entity with id {}", id);
-
         return accountRepository.getById(id);
     }
 
     @Override
     public Optional<Account> getByAccountNumber(String accountNumber) {
-//        log.info("Service layer looking for Account entity with accountNumber {}",  accountNumber);
-
         return accountRepository.getByAccountNumber(accountNumber);
     }
 
     @Override
     public Account create(AccountCreateRequestDto request) {
-//        log.info("Service layer creating Account with request {}", request);
-
         Account newAccount = new Account();
         newAccount.setId(new Random().nextInt(Integer.MAX_VALUE) + 1);
         newAccount.setAccountNumber(String.valueOf(new Random().nextInt(Integer.MAX_VALUE) + 1));
@@ -63,21 +56,24 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public double getBalance(String accountNumber) throws ResourceNotFoundException {
-//        log.info("Service layer getting balance with accountNumber {}", accountNumber);
-
         Account account = getByAccountNumber(accountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException(""));
 
         return account.getBalance();
     }
 
-//    @Transactional(
-//            timeout = 45,
-//            rollbackFor = { ResourceNotFoundException.class, NotEnoughFundsException.class }
-//    )
+    @Transactional(
+            timeout = 45,
+            rollbackFor = {
+                    ResourceNotFoundException.class,
+                    NotEnoughFundsException.class,
+                    DebitTransactionException.class,
+                    TransactionException.class,
+            }
+            , propagation = Propagation.NESTED
+    )
     @Override
-    public Optional<DebitResponseDto> debitFromBalance(DebitRequestDto debitRequest) throws ResourceNotFoundException, NotEnoughFundsException, DebitTransactionException {
-//        log.info("Service layer doing a debit from balance with accountNumber {}", debitRequest.getAccountNumber());
+    public Optional<DebitResponseDto> debitFromBalance(DebitRequestDto debitRequest) throws ResourceNotFoundException, NotEnoughFundsException, DebitTransactionException, TransactionException {
 
         Account account = getByAccountNumber(debitRequest.getAccountNumber())
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Account with accountNumber '%s' not found", debitRequest.getAccountNumber())));
@@ -92,17 +88,17 @@ public class AccountServiceImpl implements AccountService {
         // Save changes
         accountRepository.save(account);
 
+//        // Doing this on purpose
+//        throw new RuntimeException();
+
         // Register transaction
-        // final String transactionNumber = String.valueOf(new Random().nextInt(Integer.MAX_VALUE) + 1);   // Mock data
         TransactionCreateRequestDto transactionCreateRequest = new TransactionCreateRequestDto();
         transactionCreateRequest.setAccountNumberFrom(debitRequest.getAccountNumber());
         transactionCreateRequest.setAmount(debitRequest.getAmount());
         transactionCreateRequest.setType(TransactionType.DEBIT.toString());
 
-        final TransactionDto transactionDto = transactionService.registerTransaction(transactionCreateRequest)
+        final TransactionDto transactionDto = transactionService.registerTransactionRestTemplate(transactionCreateRequest)
                 .orElseThrow(() -> new DebitTransactionException(String.format("Unable to complete debit transaction from accountNumber '%s'", debitRequest.getAccountNumber())));
-
-//        log.info("Service layer applied debit from accountNumber {} of ${} with transaction #{}: ", debitRequest.getAccountNumber(), debitRequest.getAmount(), transactionNumber);
 
         DebitResponseDto response = new DebitResponseDto();
         response.setDateTime(LocalDateTime.now());
@@ -113,13 +109,17 @@ public class AccountServiceImpl implements AccountService {
         return Optional.of(response);
     }
 
-//    @Transactional(
-//            timeout = 45,
-//            rollbackFor = { ResourceNotFoundException.class }
-//    )
+    @Transactional(
+            timeout = 45,
+            rollbackFor = {
+                    ResourceNotFoundException.class,
+                    CreditTransactionException.class,
+                    TransactionException.class,
+            }
+            , propagation = Propagation.NESTED
+    )
     @Override
-    public Optional<CreditResponseDto> creditToBalance(CreditRequestDto creditRequest) throws ResourceNotFoundException, CreditTransactionException {
-//        log.info("Service layer doing a credit to balance with accountNumber {}", creditRequest.getAccountNumber());
+    public Optional<CreditResponseDto> creditToBalance(CreditRequestDto creditRequest) throws ResourceNotFoundException, CreditTransactionException, TransactionException {
 
         Account account = getByAccountNumber(creditRequest.getAccountNumber())
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Account with accountNumber '%s' not found", creditRequest.getAccountNumber())));
@@ -130,8 +130,10 @@ public class AccountServiceImpl implements AccountService {
         // Save changes
         accountRepository.save(account);
 
+        // Doing this on purpose
+//        throw new RuntimeException();
+
         // Register transaction
-        // final String transactionNumber = String.valueOf(new Random().nextInt(Integer.MAX_VALUE) + 1);   // Mock data
         TransactionCreateRequestDto transactionCreateRequest = new TransactionCreateRequestDto();
         transactionCreateRequest.setAccountNumberTo(creditRequest.getAccountNumber());
         transactionCreateRequest.setAmount(creditRequest.getAmount());
@@ -139,8 +141,6 @@ public class AccountServiceImpl implements AccountService {
 
         final TransactionDto transactionDto = transactionService.registerTransaction(transactionCreateRequest)
                 .orElseThrow(() -> new CreditTransactionException(String.format("Unable to complete credit transaction to accountNumber '%s'", creditRequest.getAccountNumber())));
-
-//        log.info("Service layer applied credit to accountNumber {} of ${} with transaction #{}: ", creditRequest.getAccountNumber(), creditRequest.getAmount(), transactionNumber);
 
         CreditResponseDto response = new CreditResponseDto();
         response.setDateTime(LocalDateTime.now());
@@ -151,41 +151,40 @@ public class AccountServiceImpl implements AccountService {
         return Optional.of(response);
     }
 
-//    @Transactional(
-//            timeout = 45,
-//            rollbackFor = { ResourceNotFoundException.class, NotEnoughFundsException.class, TransferTransactionException.class }
-//    )
+    @Transactional(
+            timeout = 45,
+            rollbackFor = {
+                    TransferTransactionException.class,
+                    TransactionException.class,
+            }
+    )
     @Override
-    public Optional<TransferResponseDto> transfer(TransferRequestDto transferRequest) throws ResourceNotFoundException, NotEnoughFundsException, TransferTransactionException {
-//        log.info("Service layer doing a transfer of ${} from accountNumber {} to accountNumber {}", transferRequest.getAmount(), transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo());
+    public Optional<TransferResponseDto> transfer(TransferRequestDto transferRequest) throws TransferTransactionException, TransactionException {
 
         // Do the debit
-        Account accountFrom = getByAccountNumber(transferRequest.getAccountNumberFrom())
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Account with accountNumber '%s' not found", transferRequest.getAccountNumberFrom())));
+        DebitRequestDto debitRequestDto = new DebitRequestDto();
+        debitRequestDto.setAccountNumber(transferRequest.getAccountNumberFrom());
+        debitRequestDto.setAmount(transferRequest.getAmount());
 
-        if(accountFrom.getBalance() < transferRequest.getAmount()) {
-            throw new NotEnoughFundsException(String.format("Account with accountNumber '%s' does not have enough funds to perform  operation.", transferRequest.getAccountNumberFrom()));
+        try {
+            this.debitFromBalance(debitRequestDto).orElseThrow(() -> new TransferTransactionException(String.format("Unable to complete transfer transaction from accountNumber '%s' to accountNumber '%s'", transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo())));
+        } catch (ResourceNotFoundException | NotEnoughFundsException | DebitTransactionException e) {
+            throw new TransferTransactionException(String.format("Unable to complete transfer transaction from accountNumber '%s' to accountNumber '%s'", transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo()));
         }
 
-        accountFrom.setBalance(accountFrom.getBalance() - transferRequest.getAmount());
-        accountRepository.save(accountFrom);
-
 //        // Doing this on purpose
-//        if(accountFrom != null) {
-//            Integer boooom = null;
-//            throw new ResourceNotFoundException(String.format("Account with accountNumber '%s' not found", transferRequest.getAccountNumberTo()));
-//        }
+        CreditRequestDto creditRequestDto = new CreditResponseDto();
+        creditRequestDto.setAccountNumber(transferRequest.getAccountNumberTo());
+        creditRequestDto.setAmount(transferRequest.getAmount());
 
-        // Do the credit
-        Account accountTo = getByAccountNumber(transferRequest.getAccountNumberTo())
-                .orElseThrow(() -> new ResourceNotFoundException(String.format("Account with accountNumber '%s' not found", transferRequest.getAccountNumberTo())));
-
-        accountTo.setBalance(accountTo.getBalance() + transferRequest.getAmount());
-        accountRepository.save(accountTo);
+        try {
+            this.creditToBalance(creditRequestDto).orElseThrow(() -> new TransferTransactionException(String.format("Unable to complete transfer transaction from accountNumber '%s' to accountNumber '%s'", transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo())));
+        } catch (ResourceNotFoundException | CreditTransactionException e) {
+            throw new TransferTransactionException(String.format("Unable to complete transfer transaction from accountNumber '%s' to accountNumber '%s'", transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo()));
+        }
 
 
         // Register transaction
-        // final String transactionNumber = String.valueOf(new Random().nextInt(Integer.MAX_VALUE) + 1);   // Mock data
         TransactionCreateRequestDto transactionCreateRequest = new TransactionCreateRequestDto();
         transactionCreateRequest.setAccountNumberFrom(transferRequest.getAccountNumberFrom());
         transactionCreateRequest.setAccountNumberTo(transferRequest.getAccountNumberTo());
@@ -194,13 +193,6 @@ public class AccountServiceImpl implements AccountService {
 
         final TransactionDto transactionDto = transactionService.registerTransaction(transactionCreateRequest)
                 .orElseThrow(() -> new TransferTransactionException(String.format("Unable to complete transfer transaction from accountNumber '%s' to accountNumber '%s'", transferRequest.getAccountNumberFrom(), transferRequest.getAccountNumberTo())));
-
-
-//        log.info("Service layer applied transfer of ${} from accountNumber {} to accountNumber {} with transaction #{}: ",
-//                transferRequest.getAmount(),
-//                transferRequest.getAccountNumberFrom(),
-//                transferRequest.getAccountNumberTo(),
-//                transactionNumber);
 
         TransferResponseDto response = new TransferResponseDto();
         response.setTransactionNumber(transactionDto.getId());

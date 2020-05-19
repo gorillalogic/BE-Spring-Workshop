@@ -19,21 +19,16 @@ repositories {
 }
 
 dependencies {
-//	implementation 'org.springframework.boot:spring-boot-starter'				// Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter-web'			// Spring Web
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'		// Spring Actuator
-	implementation 'org.springframework.boot:spring-boot-starter-aop'			// Spring AOP
 
 	// Data Access
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'	// Spring Data MongoDB
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'		// Spring Data
 	runtimeOnly 'mysql:mysql-connector-java'									// MySQL driver
 
-	// Service communication
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:2.2.2.RELEASE'	// Open Feign
-
-	compileOnly 'org.projectlombok:lombok'										// Lombok support
-	annotationProcessor 'org.projectlombok:lombok'								// Lombok support
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 
 	implementation 'org.modelmapper.extensions:modelmapper-spring:1.1.2'		// ModelMapper
 

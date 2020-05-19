@@ -18,8 +18,8 @@ public interface AccountService {
     Optional<Account> getByAccountNumber(String accountNumber);
     Account create(AccountCreateRequestDto request);
     double getBalance(String accountNumber) throws ResourceNotFoundException;
-    Optional<DebitResponseDto> debitFromBalance(DebitRequestDto debitRequest) throws ResourceNotFoundException, NotEnoughFundsException, DebitTransactionException;
-    Optional<CreditResponseDto> creditToBalance(CreditRequestDto creditRequest) throws ResourceNotFoundException, CreditTransactionException;
-    Optional<TransferResponseDto> transfer(TransferRequestDto transferRequest) throws ResourceNotFoundException, NotEnoughFundsException, TransferTransactionException;
+    Optional<DebitResponseDto> debitFromBalance(DebitRequestDto debitRequest) throws ResourceNotFoundException, NotEnoughFundsException, DebitTransactionException, TransactionException;
+    Optional<CreditResponseDto> creditToBalance(CreditRequestDto creditRequest) throws ResourceNotFoundException, CreditTransactionException, TransactionException;
+    Optional<TransferResponseDto> transfer(TransferRequestDto transferRequest) throws TransferTransactionException, TransactionException;
 
 }

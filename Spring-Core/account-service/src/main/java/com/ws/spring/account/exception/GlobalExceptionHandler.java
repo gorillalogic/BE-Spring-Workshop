@@ -19,9 +19,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({NotEnoughFundsException.class, CreditTransactionException.class, DebitTransactionException.class, TransferTransactionException.class})
-    public ResponseEntity<?> handleTransactionException(HttpServletRequest request, final Exception exception) {
+    public ResponseEntity<?> handleOperationsTransactionException(HttpServletRequest request, final Exception exception) {
         log.error("Conflict with resource in request", exception);
         return new ResponseEntity<>(HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler({TransactionException.class})
+    public ResponseEntity<?> handleTransactionException(HttpServletRequest request, final Exception exception) {
+        log.error("Problems with communication", exception);
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

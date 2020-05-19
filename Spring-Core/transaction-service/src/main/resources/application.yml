@@ -1,29 +1,18 @@
 spring.main.allow-bean-definition-overriding: true
 spring.profiles.active:
-  - world
 #  - test
 #  - mongo
   - sql
 
-
-logging.level.org.springframework: debug
-
-example2.property:
-  list: A, B, C
-  hello:
-    moon: Hello moon!
-    world: Hello world!
-
-
 # SERVER #
 server:
-  servlet.context-path: /accounts #/...
-  port: 8081
+  servlet.context-path: /transactions
+  port: 8082
 
 # MONGO #
 # Download docker image: docker pull mongo
 # Run Docker image: docker run -p 27017:27017 --name mongo1 -d mongo
-spring.data.mongodb.uri: mongodb://localhost/ws-account-service
+spring.data.mongodb.uri: mongodb://localhost/ws-transaction-service
 
 
 # MySQL #
@@ -32,10 +21,6 @@ spring.data.mongodb.uri: mongodb://localhost/ws-account-service
 spring:
   jpa.hibernate.ddl-auto: update
   datasource:
-    url: jdbc:mysql://localhost:3306/ws-account-service
+    url: jdbc:mysql://localhost:3306/ws-transaction-service
     username: root
     password: mypass
-
-transaction-service:
-  name: transaction-service
-  url: http://localhost:8082/transactions
